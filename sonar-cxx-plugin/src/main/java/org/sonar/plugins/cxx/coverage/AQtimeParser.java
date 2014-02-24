@@ -18,10 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02
  */
 package org.sonar.plugins.cxx.coverage;import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.codehaus.staxmate.in.SMFilterFactory;
 import org.codehaus.staxmate.in.SMHierarchicCursor;
 import org.codehaus.staxmate.in.SMInputCursor;
 import org.sonar.api.measures.CoverageMeasuresBuilder;
@@ -38,7 +40,7 @@ public class AQtimeParser implements CoverageParser {
      * {@inheritDoc}
      */
     public void parseReport(File xmlFile, final Map<String, CoverageMeasuresBuilder> coverageData) throws XMLStreamException {
-        CxxUtils.LOG.info("Parsing report '{}'", xmlFile);
+        CxxUtils.LOG.info("AQtime - Parsing report '{}'", xmlFile);
 
         StaxParser parser = new StaxParser(new StaxParser.XmlStreamHandler() {
             /**
@@ -46,7 +48,17 @@ public class AQtimeParser implements CoverageParser {
              */
             public void stream(SMHierarchicCursor rootCursor) throws XMLStreamException {
                 rootCursor.advance();
-                collectPackageMeasures(rootCursor.childElementCursor("RESULTS").childElementCursor("DATA"), coverageData);
+                SMInputCursor resultsCrusor = rootCursor.childElementCursor("RESULTS");
+                if (resultsCrusor.getNext() != null){
+                    SMInputCursor dataCrusor = resultsCrusor.childElementCursor("DATA");
+                    if (dataCrusor.getNext() != null){
+                        collectPackageMeasures(dataCrusor, coverageData);
+                    } else {
+                        CxxUtils.LOG.debug("Could not find 'DATA' element as a sub element of 'RESULTS'");
+                    }
+                } else {
+                    CxxUtils.LOG.debug("Could not find 'RESULTS' element as a sub element of the root");
+                }
             }
 
         });
@@ -66,13 +78,24 @@ public class AQtimeParser implements CoverageParser {
     private void collectFileMeasures(SMInputCursor row, Map<String, CoverageMeasuresBuilder> coverageData) throws XMLStreamException {
 
         String fileName = "Empty";
+        boolean foundFileName = false;
         SMInputCursor fields = row.childElementCursor("FIELD");
 
         while (fields.getNext() != null){
             if (fields.getAttrValue("ID").equals("0")){
-                fileName = fields.collectDescendantText();
+                try {
+                    fileName = new File(fields.collectDescendantText()).getCanonicalFile().getPath();
+                } catch(IOException e) {
+                    CxxUtils.LOG.warn("Could not find Canonical File name for {}, Error: {}", fields.collectDescendantText(), e.getMessage());
+                    return;
+                }
+                foundFileName = true;
                 break;
             }
+        }
+
+        if(!foundFileName){
+            CxxUtils.LOG.warn("Could not find file name inside code coverage file");
         }
 
         CoverageMeasuresBuilder builder = coverageData.get(fileName);
@@ -81,7 +104,14 @@ public class AQtimeParser implements CoverageParser {
             coverageData.put(fileName, builder);
         }
 
-        SMInputCursor lineRows = row.childElementCursor("CHILDREN").childElementCursor("DATA");
+        fields.setFilter(SMFilterFactory.getElementOnlyFilter("CHILDREN"));
+        SMInputCursor childrenCrusor = fields;
+
+        if (childrenCrusor.getNext() == null){
+            CxxUtils.LOG.debug("Could not find 'CHILDREN' element of file element");
+            return;
+        }
+        SMInputCursor lineRows = childrenCrusor.childElementCursor("DATA");
 
         while(lineRows.getNext() != null){
             SMInputCursor lineFields = lineRows.childElementCursor("FIELD");
@@ -124,6 +154,8 @@ public class AQtimeParser implements CoverageParser {
             if (blocks > 1){
                 builder.setConditions(lineId, blocks, blockHits);
             }
+
+            CxxUtils.LOG.debug("Found coverage for file {}", fileName);
 
             //Sanity check
             if (blocks < blockHits){
