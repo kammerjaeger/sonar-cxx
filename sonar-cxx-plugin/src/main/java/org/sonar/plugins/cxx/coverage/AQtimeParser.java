@@ -111,7 +111,13 @@ public class AQtimeParser implements CoverageParser {
             CxxUtils.LOG.debug("Could not find 'CHILDREN' element of file element");
             return;
         }
-        SMInputCursor lineRows = childrenCrusor.childElementCursor("DATA");
+        SMInputCursor data = childrenCrusor.childElementCursor("DATA");
+
+        if (data.getNext() == null){
+            CxxUtils.LOG.warn("Could not find 'DATA' element inside 'CHILDREN' element in the line section");
+            return;
+        }
+        SMInputCursor lineRows = data.childElementCursor("ROW");
 
         while(lineRows.getNext() != null){
             SMInputCursor lineFields = lineRows.childElementCursor("FIELD");
