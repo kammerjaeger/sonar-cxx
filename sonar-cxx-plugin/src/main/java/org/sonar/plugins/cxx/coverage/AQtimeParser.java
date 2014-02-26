@@ -153,7 +153,6 @@ public class AQtimeParser implements CoverageParser {
                                 lineFieldsID, lineFields.collectDescendantText());
                         break;
                 }
-
             }
 
             builder.setHits(lineId, (int)noHits);
@@ -161,12 +160,11 @@ public class AQtimeParser implements CoverageParser {
                 builder.setConditions(lineId, blocks, blockHits);
             }
 
-            CxxUtils.LOG.debug("Found coverage for file {}", fileName);
-
             //Sanity check
             if (blocks < blockHits){
                 CxxUtils.LOG.warn("Block hits ({}) is bigger then the amount of blocks ({})!", blockHits, blocks);
             }
         }
+        CxxUtils.LOG.debug("Found coverage for file {}", fileName);
     }
 }
