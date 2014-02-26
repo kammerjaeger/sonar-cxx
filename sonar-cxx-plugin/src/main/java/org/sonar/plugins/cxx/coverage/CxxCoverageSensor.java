@@ -2,14 +2,17 @@
  * Sonar C++ Plugin (Community)
  * Copyright (C) 2010 Neticoa SAS France
  * dev@sonar.codehaus.org
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 3 of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02
@@ -103,7 +106,7 @@ public class CxxCoverageSensor extends CxxReportSensor {
             CxxUtils.LOG.info("Added report '{}' (parsed by: {}) to the coverage data", report, parser);
             break;
           }
-        } catch(XMLStreamException e) {
+        } catch (XMLStreamException e) {
           CxxUtils.LOG.trace("Report {} cannot be parsed by {}", report, parser);
         }
       }
@@ -116,10 +119,14 @@ public class CxxCoverageSensor extends CxxReportSensor {
     return measuresTotal;
   }
 
-  private void saveMeasures(Project project, SensorContext context, Map<String, CoverageMeasuresBuilder> coverageMeasures, int coveragetype) {
+  private void saveMeasures(Project project,
+      SensorContext context,
+      Map<String, CoverageMeasuresBuilder> coverageMeasures,
+      int coveragetype) {
     for (Map.Entry<String, CoverageMeasuresBuilder> entry : coverageMeasures.entrySet()) {
       String filePath = entry.getKey();
-      org.sonar.api.resources.File cxxfile = org.sonar.api.resources.File.fromIOFile(new File(filePath), project);
+      org.sonar.api.resources.File cxxfile =
+          org.sonar.api.resources.File.fromIOFile(new File(filePath), project);
       if (fileExist(context, cxxfile)) {
         CxxUtils.LOG.debug("Saving coverage measures for file '{}'", filePath);
         for (Measure measure : entry.getValue().createMeasures()) {
