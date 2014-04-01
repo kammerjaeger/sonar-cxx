@@ -326,6 +326,7 @@ public class ExpressionTest {
     assertThat(p).matches("( y > 4)");
     assertThat(p).matches("( x== 8) && (c=='U')");
     assertThat(p).matches("(a > b) ? a : b");
+    assertThat(p).matches("a ? : b");
     assertThat(p).matches("m = 1");
     assertThat(p).matches("cout << endl");
     assertThat(p).matches("numeric_limits<char>::is_signed");
@@ -334,6 +335,7 @@ public class ExpressionTest {
     assertThat(p).matches("(Color)c");
     assertThat(p).matches("foo()->i");
     assertThat(p).matches("which ^= 1u");
+    assertThat(p).matches("p = nullptr");
   }
 
   @Test
@@ -357,6 +359,7 @@ public class ExpressionTest {
     assertThat(p).matches("i=0");
     assertThat(p).matches("(istream_iterator<string>(cin))");
     assertThat(p).matches("which ^= 1u");
+    assertThat(p).matches("p = nullptr");
   }
 
   @Test

@@ -30,7 +30,6 @@ import org.sonar.api.measures.CoreMetrics;
 import org.sonar.api.measures.PersistenceMode;
 import org.sonar.api.measures.RangeDistributionBuilder;
 import org.sonar.api.profiles.RulesProfile;
-import org.sonar.api.resources.InputFileUtils;
 import org.sonar.api.resources.Project;
 import org.sonar.api.rules.Violation;
 import org.sonar.cxx.CxxAstScanner;
@@ -51,7 +50,6 @@ import org.sonar.api.scan.filesystem.ModuleFileSystem;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
@@ -80,7 +78,7 @@ public final class CxxSquidSensor implements Sensor {
   }
 
   public boolean shouldExecuteOnProject(Project project) {
-    return CxxLanguage.KEY.equals(project.getLanguageKey());
+    return !project.getFileSystem().mainFiles(CxxLanguage.KEY).isEmpty();
   }
   
   /**
